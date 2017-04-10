@@ -8,17 +8,14 @@ import (
 
 // Optional wraps a value that may or may not be nil.
 // If a value is present, it may be unwrapped to expose the underlying value.
-type Int16 map[keyInt16]int16
+type Int16 []optionalInt16
 
-type keyInt16 int
+func EmptyInt16() Int16 {
+	return Int16{(*emptyInt16)(nil)}
+}
 
-const (
-	valueKeyInt16 keyInt16 = iota
-)
-
-// Of wraps the value in an Optional.
 func OfInt16(value int16) Int16 {
-	return Int16{valueKeyInt16: value}
+	return Int16{presentInt16(value)}
 }
 
 func OfInt16Ptr(ptr *int16) Int16 {
@@ -29,50 +26,102 @@ func OfInt16Ptr(ptr *int16) Int16 {
 	}
 }
 
-// Empty returns an empty Optional.
-func EmptyInt16() Int16 {
-	return nil
-}
-
 // IsEmpty returns true if there there is no value wrapped by this Optional.
 func (o Int16) IsEmpty() bool {
-	return o == nil
+	return o[0].IsEmpty()
 }
 
 // IsPresent returns true if there is a value wrapped by this Optional.
 func (o Int16) IsPresent() bool {
-	return !o.IsEmpty()
+	return o[0].IsPresent()
 }
 
 // If calls the function if there is a value wrapped by this Optional.
 func (o Int16) If(f func(value int16)) {
-	if o.IsPresent() {
-		f(o[valueKeyInt16])
-	}
+	o[0].If(f)
 }
 
+// ElseFunc calls the function if there is no value wrapped by this Optional,
+// and returns the value returned by the value.
 func (o Int16) ElseFunc(f func() int16) (value int16) {
-	if o.IsPresent() {
-		o.If(func(v int16) { value = v })
-		return
-	} else {
-		return f()
-	}
+	return o[0].ElseFunc(f)
 }
 
 // Else returns the value wrapped by this Optional, or the value passed in if
 // there is no value wrapped by this Optional.
 func (o Int16) Else(elseValue int16) (value int16) {
-	return o.ElseFunc(func() int16 { return elseValue })
+	return o[0].Else(elseValue)
 }
 
 // String returns a string representation of the wrapped value if one is present, otherwise an empty string.
 func (o Int16) String() string {
-	if o.IsPresent() {
-		var value int16
-		o.If(func(v int16) { value = v })
-		return fmt.Sprintf("%v", value)
-	} else {
-		return ""
-	}
+	return o[0].String()
+}
+
+type optionalInt16 interface {
+	// IsEmpty returns true if there there is no value wrapped by this Optional.
+	IsEmpty() bool
+	// IsPresent returns true if there is a value wrapped by this Optional.
+	IsPresent() bool
+	// If calls the function if there is a value wrapped by this Optional.
+	If(f func(value int16))
+	// ElseFunc calls the function if there is no value wrapped by this Optional,
+	// and returns the value returned by the value.
+	ElseFunc(f func() int16) (value int16)
+	// Else returns the value wrapped by this Optional, or the value passed in if
+	// there is no value wrapped by this Optional.
+	Else(elseValue int16) (value int16)
+	// String returns a string representation of the wrapped value if one is present, otherwise an empty string.
+	String() string
+}
+
+type emptyInt16 struct{}
+
+func (e *emptyInt16) IsEmpty() bool {
+	return true
+}
+
+func (e *emptyInt16) IsPresent() bool {
+	return false
+}
+
+func (e *emptyInt16) If(f func(value int16)) {
+}
+
+func (e *emptyInt16) ElseFunc(f func() int16) (value int16) {
+	return f()
+}
+
+func (e *emptyInt16) Else(elseValue int16) (value int16) {
+	return elseValue
+}
+
+func (e *emptyInt16) String() string {
+	return ""
+}
+
+type presentInt16 int16
+
+func (_ presentInt16) IsEmpty() bool {
+	return false
+}
+
+func (_ presentInt16) IsPresent() bool {
+	return true
+}
+
+func (p presentInt16) If(f func(value int16)) {
+	f(int16(p))
+}
+
+func (p presentInt16) ElseFunc(f func() int16) (value int16) {
+	return int16(p)
+}
+
+func (p presentInt16) Else(elseValue int16) (value int16) {
+	return int16(p)
+}
+
+func (p presentInt16) String() string {
+	return fmt.Sprintf("%v", int16(p))
 }

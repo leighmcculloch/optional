@@ -4,7 +4,6 @@ package optional
 //go:generate gotemplate "github.com/leighmcculloch/optional/template" Byte(byte)
 //go:generate gotemplate "github.com/leighmcculloch/optional/template" Complex128(complex128)
 //go:generate gotemplate "github.com/leighmcculloch/optional/template" Complex64(complex64)
-//go:generate gotemplate "github.com/leighmcculloch/optional/template" Error(error)
 //go:generate gotemplate "github.com/leighmcculloch/optional/template" Float32(float32)
 //go:generate gotemplate "github.com/leighmcculloch/optional/template" Float64(float64)
 //go:generate gotemplate "github.com/leighmcculloch/optional/template" Int(int)

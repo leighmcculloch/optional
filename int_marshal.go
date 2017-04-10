@@ -6,8 +6,8 @@ import (
 
 // MarshalText returns text for marshaling this Int.
 func (o Int) MarshalText() (text []byte, err error) {
-	o.If(func(v int) {
-		text = []byte(strconv.FormatInt(int64(v), 10))
+	o.If(func(i int) {
+		text = []byte(strconv.FormatInt(int64(i), 10))
 	})
 	return
 }

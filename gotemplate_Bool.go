@@ -8,17 +8,14 @@ import (
 
 // Optional wraps a value that may or may not be nil.
 // If a value is present, it may be unwrapped to expose the underlying value.
-type Bool map[keyBool]bool
+type Bool []optionalBool
 
-type keyBool int
+func EmptyBool() Bool {
+	return Bool{(*emptyBool)(nil)}
+}
 
-const (
-	valueKeyBool keyBool = iota
-)
-
-// Of wraps the value in an Optional.
 func OfBool(value bool) Bool {
-	return Bool{valueKeyBool: value}
+	return Bool{presentBool(value)}
 }
 
 func OfBoolPtr(ptr *bool) Bool {
@@ -29,50 +26,102 @@ func OfBoolPtr(ptr *bool) Bool {
 	}
 }
 
-// Empty returns an empty Optional.
-func EmptyBool() Bool {
-	return nil
-}
-
 // IsEmpty returns true if there there is no value wrapped by this Optional.
 func (o Bool) IsEmpty() bool {
-	return o == nil
+	return o[0].IsEmpty()
 }
 
 // IsPresent returns true if there is a value wrapped by this Optional.
 func (o Bool) IsPresent() bool {
-	return !o.IsEmpty()
+	return o[0].IsPresent()
 }
 
 // If calls the function if there is a value wrapped by this Optional.
 func (o Bool) If(f func(value bool)) {
-	if o.IsPresent() {
-		f(o[valueKeyBool])
-	}
+	o[0].If(f)
 }
 
+// ElseFunc calls the function if there is no value wrapped by this Optional,
+// and returns the value returned by the value.
 func (o Bool) ElseFunc(f func() bool) (value bool) {
-	if o.IsPresent() {
-		o.If(func(v bool) { value = v })
-		return
-	} else {
-		return f()
-	}
+	return o[0].ElseFunc(f)
 }
 
 // Else returns the value wrapped by this Optional, or the value passed in if
 // there is no value wrapped by this Optional.
 func (o Bool) Else(elseValue bool) (value bool) {
-	return o.ElseFunc(func() bool { return elseValue })
+	return o[0].Else(elseValue)
 }
 
 // String returns a string representation of the wrapped value if one is present, otherwise an empty string.
 func (o Bool) String() string {
-	if o.IsPresent() {
-		var value bool
-		o.If(func(v bool) { value = v })
-		return fmt.Sprintf("%v", value)
-	} else {
-		return ""
-	}
+	return o[0].String()
+}
+
+type optionalBool interface {
+	// IsEmpty returns true if there there is no value wrapped by this Optional.
+	IsEmpty() bool
+	// IsPresent returns true if there is a value wrapped by this Optional.
+	IsPresent() bool
+	// If calls the function if there is a value wrapped by this Optional.
+	If(f func(value bool))
+	// ElseFunc calls the function if there is no value wrapped by this Optional,
+	// and returns the value returned by the value.
+	ElseFunc(f func() bool) (value bool)
+	// Else returns the value wrapped by this Optional, or the value passed in if
+	// there is no value wrapped by this Optional.
+	Else(elseValue bool) (value bool)
+	// String returns a string representation of the wrapped value if one is present, otherwise an empty string.
+	String() string
+}
+
+type emptyBool struct{}
+
+func (e *emptyBool) IsEmpty() bool {
+	return true
+}
+
+func (e *emptyBool) IsPresent() bool {
+	return false
+}
+
+func (e *emptyBool) If(f func(value bool)) {
+}
+
+func (e *emptyBool) ElseFunc(f func() bool) (value bool) {
+	return f()
+}
+
+func (e *emptyBool) Else(elseValue bool) (value bool) {
+	return elseValue
+}
+
+func (e *emptyBool) String() string {
+	return ""
+}
+
+type presentBool bool
+
+func (_ presentBool) IsEmpty() bool {
+	return false
+}
+
+func (_ presentBool) IsPresent() bool {
+	return true
+}
+
+func (p presentBool) If(f func(value bool)) {
+	f(bool(p))
+}
+
+func (p presentBool) ElseFunc(f func() bool) (value bool) {
+	return bool(p)
+}
+
+func (p presentBool) Else(elseValue bool) (value bool) {
+	return bool(p)
+}
+
+func (p presentBool) String() string {
+	return fmt.Sprintf("%v", bool(p))
 }
